@@ -38,19 +38,20 @@ cd WatchTracker
 # Umgebungsvariablen konfigurieren
 cp .env.example .env
 # Öffne .env und trage deinen TMDB_API_KEY ein
+# Optional: FRONTEND_PORT, BACKEND_PORT und DB_NAME anpassen
 
 # Anwendung starten
 docker compose up --build -d
 ```
 
-Die Anwendung ist dann erreichbar unter:
+Die Anwendung ist dann erreichbar unter (Standardwerte aus `.env.example`):
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:8000
 - **API Docs (Swagger)**: http://localhost:8000/docs
 
 ### Zugriff von anderen Geräten
 
-Um die App von anderen Geräten im lokalen Netzwerk zu erreichen, verwende die IP-Adresse des Servers statt `localhost`, z. B. `http://192.168.1.100:3000`.
+Um die App von anderen Geräten im lokalen Netzwerk zu erreichen, verwende die IP-Adresse des Servers statt `localhost`, z. B. `http://192.168.1.100:3000` (oder den in `.env` gesetzten `FRONTEND_PORT`).
 
 ## Benutzung
 
@@ -177,10 +178,14 @@ Die Anwendung speichert API-Daten und manuelle Korrekturen in getrennten Spalten
 
 ## Daten sichern
 
-Die SQLite-Datenbank liegt im `data/`-Verzeichnis. Für ein Backup:
+Die SQLite-Datenbank liegt im `data/`-Verzeichnis (Standard: `watchtracker.db`, konfigurierbar über `DB_NAME` in `.env`).
+
+Wenn die App laeuft (WAL-Modus), sollten zusaetzlich die WAL-Datei und optional die SHM-Datei gesichert werden:
 
 ```bash
-cp data/serien_tracker.db data/serien_tracker_backup.db
+cp data/watchtracker.db data/watchtracker_backup.db
+cp data/watchtracker.db-wal data/watchtracker_backup.db-wal
+cp data/watchtracker.db-shm data/watchtracker_backup.db-shm || true
 ```
 
 ## Stoppen & Neu starten
@@ -200,8 +205,8 @@ docker compose up --build -d
 
 - **TMDB-API-Fehler**: Prüfe ob der API-Key in `.env` korrekt eingetragen ist
 - **Leere Ergebnisse**: Manche Serien haben keine deutschen Titel – es wird dann der englische Titel angezeigt
-- **Port belegt**: Ändere die Ports in `docker-compose.yml` (z. B. `3001:80` für Frontend)
-- **Datenbank-Probleme**: Lösche `data/serien_tracker.db` und starte neu für einen frischen Start
+- **Port belegt**: Passe `FRONTEND_PORT` und/oder `BACKEND_PORT` in `.env` an (z. B. `FRONTEND_PORT=3001`) und starte die Container neu
+- **Datenbank-Probleme**: Lösche `data/watchtracker.db` (oder die über `DB_NAME` gesetzte Datei) und starte neu für einen frischen Start
 
 ## Lizenz
 
