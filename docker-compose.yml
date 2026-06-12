@@ -3,7 +3,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: serien-tracker-backend
+    container_name: watchtracker-backend
     env_file:
       - .env
     volumes:
@@ -16,7 +16,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: serien-tracker-frontend
+    container_name: watchtracker-frontend
     ports:
       - "${FRONTEND_PORT:-3000}:80"
     depends_on:
