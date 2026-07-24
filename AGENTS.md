@@ -7,12 +7,17 @@
 ## Projektkontext
 - Backend: FastAPI + SQLAlchemy in backend/app
 - Frontend: React + TypeScript + Vite in frontend/src
-- Betrieb: Docker Compose (Frontend + Backend + SQLite-Volume)
+- Betrieb: Docker Compose (Frontend + Backend + SQLite-Datenbank im Bind-Mount `./data:/app/data`)
 
 ## Arbeitsweise
 - Bevorzuge kleine, fokussierte Commits mit klarer Begruendung.
 - Aendere nur die Dateien, die fuer die Aufgabe notwendig sind.
-- Passe bei API-Aenderungen immer sowohl Backend-Schemas als auch Frontend-Typen an.
+- Passe bei API-Aenderungen immer in dieser Reihenfolge an:
+  1. DB-Modell
+  2. Pydantic-Schema
+  3. Router
+  4. Frontend-Typen (`frontend/src/types/index.ts`)
+  5. Frontend-API-Client (`frontend/src/api/client.ts`) und betroffene Komponenten
 - Halte Namen, Sprachstil und Struktur konsistent mit bestehendem Code.
 
 ## Fachliche Regeln
@@ -22,14 +27,16 @@
 - Flags fuer Fortschritt (z. B. ignore_in_progress) duerfen durch Sync nicht verloren gehen.
 
 ## Backend-Regeln
-- Router-Endpunkte unter backend/app/routers in bestehende Struktur einordnen.
+- Router-Endpunkte unter backend/app/routers in bestehende Struktur einordnen und in `backend/app/main.py` registrieren.
 - DB-Modelle in backend/app/models.py und Pydantic-Schemas in backend/app/schemas.py konsistent halten.
-- Bei neuen Feldern sicherstellen, dass bestehende SQLite-Instanzen kompatibel bleiben.
+- Bei neuen Feldern sicherstellen, dass bestehende SQLite-Instanzen kompatibel bleiben:
+  - Neue Spalten am besten `nullable=True` oder mit sinnvollem Default versehen.
+  - Alembic-Migrationen sind aktuell nicht eingerichtet; daher ist Abwärtskompatibilität manuell sicherzustellen.
 - Fehlerfaelle mit sinnvollen HTTP-Statuscodes und klaren Fehlermeldungen behandeln.
 
 ## Frontend-Regeln
 - API-Aufrufe zentral in frontend/src/api/client.ts pflegen.
-- Datentypen zentral in frontend/src/types/index.ts pflegen.
+- Datentypen zentral in frontend/src/types/index.ts pflegen und exportieren.
 - Komponenten schlank halten; Seitenlogik in pages belassen.
 - UI-Verhalten bei bestehenden Seiten nicht ohne Not veraendern.
 
@@ -40,9 +47,17 @@
   - docker compose logs --tail 200 backend frontend
 - Bei API-Aenderungen mindestens die betroffenen Endpunkte manuell gegenpruefen.
 - Bei UI-Aenderungen betroffene Seiten im Browser funktional testen.
-- Bei Nutzung ueber VS Code Remote Explorer gilt: In der Bash/im Terminal kann localhost verwendet werden.
-- Fuer Tests im lokalen Browser immer server als Hostname verwenden (mit passendem Port), nicht localhost.
+- Bei Nutzung ueber VS Code Remote Explorer gilt:
+  - Innerhalb der Remote-Bash/des Remote-Terminals kann `localhost` verwendet werden.
+  - Im Browser auf dem lokalen Rechner muss der Hostname des Remote-Servers verwendet werden (in dieser Umgebung: `server`), nicht `localhost`.
 
 ## Dokumentation
-- Bei neuen Features oder Verhaltensaenderungen README.md kurz aktualisieren.
+- Bei neuen Features oder Verhaltensaenderungen README.md kurz aktualisieren:
+  - Neue Umgebungsvariablen
+  - Neue Endpunkte
+  - Geaenderte Bedienung oder Ablaeufe
 - Halte Hinweise knapp, konkret und wartbar.
+
+## Sicherheit
+- Secrets (z. B. TMDB-API-Key) duerfen nur in `.env` oder `.env.dev` stehen und nicht in Git committed werden.
+- Vor dem Commit pruefen, dass keine Zugangsdaten, API-Keys oder persoenliche Daten im Code landen.
