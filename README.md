@@ -44,6 +44,23 @@ cp .env.example .env
 docker compose up --build -d
 ```
 
+### Parallele Entwicklungsumgebung
+
+Eine zweite, isolierte Instanz mit eigener Datenbank und eigenen Ports lässt sich über `.env.dev` betreiben:
+
+```bash
+# Falls noch nicht vorhanden:
+cp .env.example .env.dev
+
+# Passe .env.dev an (andere Ports, anderer DB_NAME, TMDB_API_KEY)
+docker compose --env-file .env.dev up -d --build
+```
+
+Erreichbar dann unter (Standardwerte aus `.env.dev`):
+- **Frontend**: http://localhost:3002
+- **Backend API**: http://localhost:8002
+- **API Docs (Swagger)**: http://localhost:8002/docs
+
 Die Anwendung ist dann erreichbar unter (Standardwerte aus `.env.example`):
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:8000

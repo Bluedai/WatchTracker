@@ -3,9 +3,9 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    # container_name: watchtracker-backend
-    env_file:
-      - .env
+    environment:
+      - DB_NAME=${DB_NAME:-watchtracker_dummy.db}
+      - TMDB_API_KEY=${TMDB_API_KEY:-your_tmdb_api_key}
     volumes:
       - ./data:/app/data
     ports:
@@ -16,7 +16,6 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    # container_name: watchtracker-frontend
     ports:
       - "${FRONTEND_PORT:-3000}:80"
     depends_on:
