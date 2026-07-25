@@ -5,7 +5,9 @@ export interface TMDBSearchResult {
   overview: string | null;
   poster_path: string | null;
   first_air_date: string | null;
+  release_date: string | null;
   already_added: boolean;
+  media_type: 'tv' | 'movie';
 }
 
 export interface SearchResponse {
@@ -142,7 +144,8 @@ export interface EpisodeDetail {
 
 export interface WatchEntry {
   id: number;
-  episode_id: number;
+  episode_id: number | null;
+  movie_id: number | null;
   watched_at: string;
   notes: string | null;
   created_at: string;
@@ -153,13 +156,16 @@ export interface WatchHistoryItem {
   id: number;
   watched_at: string;
   notes: string | null;
-  episode_id: number;
-  episode_number: number;
-  episode_name: string;
-  season_number: number;
-  series_id: number;
-  series_name: string;
+  episode_id: number | null;
+  episode_number: number | null;
+  episode_name: string | null;
+  season_number: number | null;
+  series_id: number | null;
+  series_name: string | null;
   series_poster_path: string | null;
+  movie_id: number | null;
+  movie_title: string | null;
+  movie_poster_path: string | null;
 }
 
 export interface ProgressResponse {
@@ -181,10 +187,55 @@ export interface StatsResponse {
   total_watched: number;
   total_watch_entries: number;
   percentage: number;
+  total_movies: number;
+  total_watched_movies: number;
+  movie_percentage: number;
 }
 
 export interface SeasonIgnoreResponse {
   season_id: number;
   updated_episodes: number;
   ignore_in_progress: boolean;
+}
+
+export interface MovieListItem {
+  id: number;
+  tmdb_id: number;
+  display_title: string;
+  poster_path: string | null;
+  release_date: string | null;
+  runtime: number | null;
+  status: string | null;
+  is_watched: boolean;
+  watch_count: number;
+  has_override: boolean;
+  missing_from_api: boolean;
+  last_synced_at: string | null;
+  tags: Tag[];
+}
+
+export interface MovieDetail {
+  id: number;
+  tmdb_id: number;
+  title_en: string;
+  title_de: string | null;
+  title_override: string | null;
+  display_title: string;
+  overview_en: string | null;
+  overview_de: string | null;
+  overview_override: string | null;
+  display_overview: string | null;
+  poster_path: string | null;
+  release_date: string | null;
+  runtime: number | null;
+  status: string | null;
+  has_override: boolean;
+  missing_from_api: boolean;
+  last_synced_at: string | null;
+  created_at: string;
+  updated_at: string;
+  tags: Tag[];
+  is_watched: boolean;
+  watch_count: number;
+  watch_entries: WatchEntryBrief[];
 }

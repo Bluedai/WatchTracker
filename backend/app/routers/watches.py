@@ -5,7 +5,7 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
-from app.models import Episode, Season, Series, WatchEntry
+from app.models import Episode, Movie, Season, Series, WatchEntry
 from app.schemas import WatchEntryCreate, WatchEntryResponse, WatchEntryUpdate, WatchHistoryItem
 
 router = APIRouter()
@@ -85,7 +85,8 @@ def watch_history(
         .options(
             joinedload(WatchEntry.episode)
             .joinedload(Episode.season)
-            .joinedload(Season.series)
+            .joinedload(Season.series),
+            joinedload(WatchEntry.movie),
         )
         .order_by(desc(WatchEntry.watched_at))
         .offset(offset)
@@ -95,21 +96,44 @@ def watch_history(
 
     result = []
     for e in entries:
-        ep = e.episode
-        season = ep.season
-        series = season.series
-        result.append(
-            WatchHistoryItem(
-                id=e.id,
-                watched_at=e.watched_at,
-                notes=e.notes,
-                episode_id=ep.id,
-                episode_number=ep.episode_number,
-                episode_name=ep.display_name,
-                season_number=season.season_number,
-                series_id=series.id,
-                series_name=series.display_name,
-                series_poster_path=series.poster_path,
+        if e.movie_id is not None:
+            movie = e.movie
+            result.append(
+                WatchHistoryItem(
+                    id=e.id,
+                    watched_at=e.watched_at,
+                    notes=e.notes,
+                    episode_id=None,
+                    episode_number=None,
+                    episode_name=None,
+                    season_number=None,
+                    series_id=None,
+                    series_name=None,
+                    series_poster_path=None,
+                    movie_id=movie.id,
+                    movie_title=movie.display_title,
+                    movie_poster_path=movie.poster_path,
+                )
             )
-        )
+        else:
+            ep = e.episode
+            season = ep.season
+            series = season.series
+            result.append(
+                WatchHistoryItem(
+                    id=e.id,
+                    watched_at=e.watched_at,
+                    notes=e.notes,
+                    episode_id=ep.id,
+                    episode_number=ep.episode_number,
+                    episode_name=ep.display_name,
+                    season_number=season.season_number,
+                    series_id=series.id,
+                    series_name=series.display_name,
+                    series_poster_path=series.poster_path,
+                    movie_id=None,
+                    movie_title=None,
+                    movie_poster_path=None,
+                )
+            )
     return result

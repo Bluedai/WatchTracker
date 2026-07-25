@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { TMDBSearchResult } from '../types';
-import { searchSeries, addSeries, posterUrl } from '../api/client';
+import { searchSeries, searchMovies, addSeries, addMovie, posterUrl } from '../api/client';
+
+type MediaType = 'tv' | 'movie';
 
 export default function Search() {
   const [query, setQuery] = useState('');
@@ -9,6 +11,7 @@ export default function Search() {
   const [loading, setLoading] = useState(false);
   const [addingId, setAddingId] = useState<number | null>(null);
   const [searched, setSearched] = useState(false);
+  const [mediaType, setMediaType] = useState<MediaType>('tv');
   const navigate = useNavigate();
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -16,7 +19,9 @@ export default function Search() {
     if (!query.trim()) return;
     setLoading(true);
     try {
-      const data = await searchSeries(query.trim());
+      const data = mediaType === 'tv'
+        ? await searchSeries(query.trim())
+        : await searchMovies(query.trim());
       setResults(data.results);
       setSearched(true);
     } finally {
@@ -24,26 +29,61 @@ export default function Search() {
     }
   };
 
-  const handleAdd = async (tmdbId: number) => {
-    setAddingId(tmdbId);
+  const handleAdd = async (result: TMDBSearchResult) => {
+    setAddingId(result.tmdb_id);
     try {
-      const series = await addSeries(tmdbId);
-      navigate(`/serie/${series.id}`);
+      if (result.media_type === 'movie') {
+        const movie = await addMovie(result.tmdb_id);
+        navigate(`/film/${movie.id}`);
+      } else {
+        const series = await addSeries(result.tmdb_id);
+        navigate(`/serie/${series.id}`);
+      }
     } catch {
       setAddingId(null);
     }
   };
 
+  const year = (result: TMDBSearchResult) =>
+    (result.first_air_date || result.release_date)?.slice(0, 4);
+
   return (
     <div>
-      <h1 className="text-2xl font-bold text-white mb-6">Serie suchen</h1>
+      <h1 className="text-2xl font-bold text-white mb-6">
+        {mediaType === 'tv' ? 'Serie suchen' : 'Film suchen'}
+      </h1>
+
+      <div className="flex gap-2 mb-6">
+        <button
+          type="button"
+          onClick={() => { setMediaType('tv'); setResults([]); setSearched(false); }}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            mediaType === 'tv'
+              ? 'bg-indigo-600 text-white'
+              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+          }`}
+        >
+          Serien
+        </button>
+        <button
+          type="button"
+          onClick={() => { setMediaType('movie'); setResults([]); setSearched(false); }}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            mediaType === 'movie'
+              ? 'bg-indigo-600 text-white'
+              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+          }`}
+        >
+          Filme
+        </button>
+      </div>
 
       <form onSubmit={handleSearch} className="flex gap-3 mb-8">
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Serienname eingeben…"
+          placeholder={mediaType === 'tv' ? 'Serienname eingeben…' : 'Filmtitel eingeben…'}
           className="flex-1 bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500"
         />
         <button
@@ -62,7 +102,7 @@ export default function Search() {
       <div className="space-y-3">
         {results.map((r) => (
           <div
-            key={r.tmdb_id}
+            key={`${r.media_type}-${r.tmdb_id}`}
             className="flex items-center gap-4 bg-gray-800 rounded-lg p-3 hover:bg-gray-750"
           >
             <div className="w-12 h-18 shrink-0 bg-gray-700 rounded overflow-hidden">
@@ -78,8 +118,8 @@ export default function Search() {
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-medium text-white truncate">{r.name}</h3>
-              {r.first_air_date && (
-                <p className="text-sm text-gray-400">{r.first_air_date.slice(0, 4)}</p>
+              {year(r) && (
+                <p className="text-sm text-gray-400">{year(r)}</p>
               )}
               {r.overview && (
                 <p className="text-xs text-gray-500 mt-1 line-clamp-2">{r.overview}</p>
@@ -90,7 +130,7 @@ export default function Search() {
                 <span className="text-sm text-green-400">✓ Hinzugefügt</span>
               ) : (
                 <button
-                  onClick={() => handleAdd(r.tmdb_id)}
+                  onClick={() => handleAdd(r)}
                   disabled={addingId === r.tmdb_id}
                   className="bg-indigo-600 hover:bg-indigo-500 disabled:bg-gray-600 text-white text-sm px-4 py-1.5 rounded transition-colors"
                 >

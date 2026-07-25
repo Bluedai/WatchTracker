@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
-from app.models import Episode, Season, Series
+from app.models import Episode, Movie, Season, Series
 from app.services.tmdb import tmdb_client
 
 logger = logging.getLogger(__name__)
@@ -144,3 +144,49 @@ async def add_series_from_tmdb(db: Session, tmdb_id: int) -> Series:
     # Now sync all seasons and episodes
     series = await sync_series_from_tmdb(db, series)
     return series
+
+
+async def sync_movie_from_tmdb(db: Session, movie: Movie) -> Movie:
+    """Sync a movie from TMDB. Only updates API-sourced columns."""
+    details = await tmdb_client.get_movie_details(movie.tmdb_id)
+
+    movie.title_en = details["title_en"]
+    movie.title_de = details["title_de"]
+    movie.overview_en = details["overview_en"]
+    movie.overview_de = details["overview_de"]
+    movie.poster_path = details["poster_path"]
+    movie.release_date = details["release_date"]
+    movie.runtime = details["runtime"]
+    movie.status = details["status"]
+    movie.missing_from_api = False
+    movie.last_synced_at = datetime.now(timezone.utc)
+
+    db.commit()
+    db.refresh(movie)
+    return movie
+
+
+async def add_movie_from_tmdb(db: Session, tmdb_id: int) -> Movie:
+    """Add a new movie from TMDB and sync its data."""
+    existing = db.query(Movie).filter(Movie.tmdb_id == tmdb_id).first()
+    if existing:
+        return existing
+
+    details = await tmdb_client.get_movie_details(tmdb_id)
+
+    movie = Movie(
+        tmdb_id=tmdb_id,
+        title_en=details["title_en"],
+        title_de=details["title_de"],
+        overview_en=details["overview_en"],
+        overview_de=details["overview_de"],
+        poster_path=details["poster_path"],
+        release_date=details["release_date"],
+        runtime=details["runtime"],
+        status=details["status"],
+    )
+    db.add(movie)
+    db.commit()
+    db.refresh(movie)
+
+    return await sync_movie_from_tmdb(db, movie)

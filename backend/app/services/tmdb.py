@@ -60,11 +60,58 @@ class TMDBClient:
                 "overview": item.get("overview") or en_item.get("overview"),
                 "poster_path": item.get("poster_path"),
                 "first_air_date": item.get("first_air_date"),
+                "media_type": "tv",
             })
 
         return {
             "results": results,
             "total_results": data_de.get("total_results", 0),
+        }
+
+    async def search_movies(self, query: str, page: int = 1) -> dict:
+        """Search for movies. Returns German results with English fallback."""
+        data_de = await self._get("/search/movie", {"query": query, "language": "de-DE", "page": page})
+        data_en = await self._get("/search/movie", {"query": query, "language": "en-US", "page": page})
+
+        en_map = {r["id"]: r for r in data_en.get("results", [])}
+
+        results = []
+        for item in data_de.get("results", []):
+            tmdb_id = item["id"]
+            en_item = en_map.get(tmdb_id, {})
+            results.append({
+                "tmdb_id": tmdb_id,
+                "name_de": item.get("title"),
+                "name_en": en_item.get("title", item.get("original_title", "")),
+                "name": item.get("title") or en_item.get("title", ""),
+                "overview": item.get("overview") or en_item.get("overview"),
+                "poster_path": item.get("poster_path"),
+                "release_date": item.get("release_date"),
+                "media_type": "movie",
+            })
+
+        return {
+            "results": results,
+            "total_results": data_de.get("total_results", 0),
+        }
+
+    async def get_movie_details(self, tmdb_id: int) -> dict:
+        """Get movie details in both German and English."""
+        data_de, data_en = await asyncio.gather(
+            self._get(f"/movie/{tmdb_id}", {"language": "de-DE"}),
+            self._get(f"/movie/{tmdb_id}", {"language": "en-US"}),
+        )
+
+        return {
+            "tmdb_id": tmdb_id,
+            "title_de": data_de.get("title"),
+            "title_en": data_en.get("title", data_de.get("original_title", "")),
+            "overview_de": data_de.get("overview") or None,
+            "overview_en": data_en.get("overview") or None,
+            "poster_path": data_de.get("poster_path"),
+            "release_date": data_de.get("release_date"),
+            "runtime": data_de.get("runtime"),
+            "status": data_de.get("status"),
         }
 
     async def get_series_details(self, tmdb_id: int) -> dict:

@@ -8,6 +8,11 @@ const navItems = [
   { path: '/verlauf', label: 'Verlauf' },
 ];
 
+function isActive(path: string, pathname: string): boolean {
+  if (path === '/') return pathname === '/';
+  return pathname.startsWith(path);
+}
+
 export default function Layout({ children }: { children: ReactNode }) {
   const location = useLocation();
 
@@ -25,7 +30,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                   key={item.path}
                   to={item.path}
                   className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
-                    location.pathname === item.path
+                    isActive(item.path, location.pathname)
                       ? 'bg-gray-900 text-white'
                       : 'text-gray-300 hover:bg-gray-700 hover:text-white'
                   }`}

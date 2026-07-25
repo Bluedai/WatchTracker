@@ -68,6 +68,10 @@ class Tag(Base):
         secondary="series_tags",
         back_populates="tags",
     )
+    movies: Mapped[list["Movie"]] = relationship(
+        secondary="movie_tags",
+        back_populates="tags",
+    )
 
 
 class SeriesTag(Base):
@@ -76,6 +80,16 @@ class SeriesTag(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     series_id: Mapped[int] = mapped_column(Integer, ForeignKey("series.id", ondelete="CASCADE"), nullable=False)
+    tag_id: Mapped[int] = mapped_column(Integer, ForeignKey("tags.id", ondelete="CASCADE"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+class MovieTag(Base):
+    __tablename__ = "movie_tags"
+    __table_args__ = (UniqueConstraint("movie_id", "tag_id"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    movie_id: Mapped[int] = mapped_column(Integer, ForeignKey("movies.id", ondelete="CASCADE"), nullable=False)
     tag_id: Mapped[int] = mapped_column(Integer, ForeignKey("tags.id", ondelete="CASCADE"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
@@ -171,10 +185,66 @@ class WatchEntry(Base):
     __tablename__ = "watch_entries"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    episode_id: Mapped[int] = mapped_column(Integer, ForeignKey("episodes.id", ondelete="CASCADE"), nullable=False)
+    episode_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("episodes.id", ondelete="CASCADE"), nullable=True)
+    movie_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("movies.id", ondelete="CASCADE"), nullable=True)
     watched_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
 
-    episode: Mapped["Episode"] = relationship(back_populates="watch_entries")
+    episode: Mapped["Episode | None"] = relationship(back_populates="watch_entries")
+    movie: Mapped["Movie | None"] = relationship(back_populates="watch_entries")
+
+
+class Movie(Base):
+    __tablename__ = "movies"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    tmdb_id: Mapped[int] = mapped_column(Integer, unique=True, nullable=False)
+
+    title_en: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    title_de: Mapped[str | None] = mapped_column(Text, nullable=True)
+    title_override: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    overview_en: Mapped[str | None] = mapped_column(Text, nullable=True)
+    overview_de: Mapped[str | None] = mapped_column(Text, nullable=True)
+    overview_override: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    poster_path: Mapped[str | None] = mapped_column(Text, nullable=True)
+    release_date: Mapped[str | None] = mapped_column(Text, nullable=True)
+    runtime: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    status: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    missing_from_api: Mapped[bool] = mapped_column(Boolean, default=False)
+    last_synced_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
+
+    watch_entries: Mapped[list["WatchEntry"]] = relationship(
+        back_populates="movie", cascade="all, delete-orphan", order_by="WatchEntry.watched_at.desc()"
+    )
+    tags: Mapped[list["Tag"]] = relationship(
+        secondary="movie_tags",
+        back_populates="movies",
+        order_by="Tag.name",
+    )
+
+    @property
+    def display_title(self) -> str:
+        return self.title_override or self.title_de or self.title_en or ""
+
+    @property
+    def display_overview(self) -> str | None:
+        return self.overview_override or self.overview_de or self.overview_en
+
+    @property
+    def has_override(self) -> bool:
+        return self.title_override is not None or self.overview_override is not None
+
+    @property
+    def is_watched(self) -> bool:
+        return len(self.watch_entries) > 0
+
+    @property
+    def watch_count(self) -> int:
+        return len(self.watch_entries)

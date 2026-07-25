@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { WatchHistoryItem } from '../types';
-import { getWatchHistory, posterUrl, deleteWatch } from '../api/client';
+import { getWatchHistory, posterUrl, deleteWatch, deleteMovieWatch } from '../api/client';
 
 export default function WatchHistoryPage() {
   const [history, setHistory] = useState<WatchHistoryItem[]>([]);
@@ -18,9 +18,13 @@ export default function WatchHistoryPage() {
 
   useEffect(() => load(offset), [offset]);
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (item: WatchHistoryItem) => {
     if (!window.confirm('Sichtung wirklich löschen?')) return;
-    await deleteWatch(id);
+    if (item.movie_id !== null) {
+      await deleteMovieWatch(item.id);
+    } else {
+      await deleteWatch(item.id);
+    }
     load(offset);
   };
 
@@ -40,9 +44,9 @@ export default function WatchHistoryPage() {
               className="flex items-center gap-4 bg-gray-800 rounded-lg px-4 py-3"
             >
               <div className="w-10 h-14 shrink-0 bg-gray-700 rounded overflow-hidden">
-                {item.series_poster_path ? (
+                {item.series_poster_path || item.movie_poster_path ? (
                   <img
-                    src={posterUrl(item.series_poster_path, 'w92')}
+                    src={posterUrl(item.series_poster_path || item.movie_poster_path, 'w92')}
                     alt=""
                     className="w-full h-full object-cover"
                   />
@@ -51,23 +55,37 @@ export default function WatchHistoryPage() {
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <Link
-                    to={`/serie/${item.series_id}`}
-                    className="font-medium text-white hover:text-indigo-300 truncate"
-                  >
-                    {item.series_name}
-                  </Link>
-                  <span className="text-gray-500 text-sm shrink-0">
-                    S{item.season_number}E{item.episode_number}
-                  </span>
-                </div>
-                <Link
-                  to={`/episode/${item.episode_id}`}
-                  className="text-sm text-gray-400 hover:text-indigo-300 truncate block"
-                >
-                  {item.episode_name}
-                </Link>
+                {item.movie_id !== null ? (
+                  <>
+                    <Link
+                      to={`/film/${item.movie_id}`}
+                      className="font-medium text-white hover:text-indigo-300 truncate block"
+                    >
+                      {item.movie_title}
+                    </Link>
+                    <span className="text-xs text-gray-500">Film</span>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <Link
+                        to={`/serie/${item.series_id}`}
+                        className="font-medium text-white hover:text-indigo-300 truncate"
+                      >
+                        {item.series_name}
+                      </Link>
+                      <span className="text-gray-500 text-sm shrink-0">
+                        S{item.season_number}E{item.episode_number}
+                      </span>
+                    </div>
+                    <Link
+                      to={`/episode/${item.episode_id}`}
+                      className="text-sm text-gray-400 hover:text-indigo-300 truncate block"
+                    >
+                      {item.episode_name}
+                    </Link>
+                  </>
+                )}
                 {item.notes && (
                   <p className="text-xs text-gray-500 mt-0.5">{item.notes}</p>
                 )}
@@ -77,7 +95,7 @@ export default function WatchHistoryPage() {
                   {new Date(item.watched_at).toLocaleString('de-DE')}
                 </div>
                 <button
-                  onClick={() => handleDelete(item.id)}
+                  onClick={() => handleDelete(item)}
                   className="text-red-400 hover:text-red-300 text-xs mt-1"
                 >
                   Löschen

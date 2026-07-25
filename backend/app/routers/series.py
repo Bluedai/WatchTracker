@@ -3,7 +3,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
-from app.models import Episode, Season, Series, Tag, WatchEntry
+from app.models import Episode, Movie, Season, Series, Tag, WatchEntry
 from app.schemas import (
     ProgressResponse,
     SeasonBrief,
@@ -497,10 +497,16 @@ def get_stats(db: Session = Depends(get_db)):
     )
     total_watch_entries = db.query(WatchEntry).count()
 
+    total_movies = db.query(Movie).count()
+    total_watched_movies = db.query(Movie).filter(Movie.watch_entries.any()).count()
+
     return StatsResponse(
         total_series=total_series,
         total_episodes=total_episodes,
         total_watched=total_watched,
         total_watch_entries=total_watch_entries,
         percentage=round(total_watched / total_episodes * 100, 1) if total_episodes > 0 else 0,
+        total_movies=total_movies,
+        total_watched_movies=total_watched_movies,
+        movie_percentage=round(total_watched_movies / total_movies * 100, 1) if total_movies > 0 else 0,
     )

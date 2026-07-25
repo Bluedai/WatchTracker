@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { SeriesListItem, Tag } from '../types';
-import { createTag, deleteTag, getSeries, getTags, updateTag } from '../api/client';
+import type { MovieListItem, SeriesListItem, Tag } from '../types';
+import { createTag, deleteTag, getMovies, getSeries, getTags, updateTag } from '../api/client';
 
 export default function TagAdminPage() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [series, setSeries] = useState<SeriesListItem[]>([]);
+  const [movies, setMovies] = useState<MovieListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [newTagName, setNewTagName] = useState('');
   const [editingTagId, setEditingTagId] = useState<number | null>(null);
@@ -13,17 +14,18 @@ export default function TagAdminPage() {
 
   const load = () => {
     setLoading(true);
-    Promise.all([getTags(), getSeries()])
-      .then(([allTags, allSeries]) => {
+    Promise.all([getTags(), getSeries(), getMovies()])
+      .then(([allTags, allSeries, allMovies]) => {
         setTags(allTags);
         setSeries(allSeries);
+        setMovies(allMovies);
       })
       .finally(() => setLoading(false));
   };
 
   useEffect(load, []);
 
-  const usageByTag = useMemo(() => {
+  const seriesUsageByTag = useMemo(() => {
     const counts = new Map<number, number>();
 
     for (const tag of tags) {
@@ -38,6 +40,22 @@ export default function TagAdminPage() {
 
     return counts;
   }, [tags, series]);
+
+  const movieUsageByTag = useMemo(() => {
+    const counts = new Map<number, number>();
+
+    for (const tag of tags) {
+      counts.set(tag.id, 0);
+    }
+
+    for (const item of movies) {
+      for (const tag of item.tags) {
+        counts.set(tag.id, (counts.get(tag.id) || 0) + 1);
+      }
+    }
+
+    return counts;
+  }, [tags, movies]);
 
   const sortedTags = useMemo(
     () => [...tags].sort((a, b) => a.name.localeCompare(b.name, 'de')),
@@ -82,6 +100,12 @@ export default function TagAdminPage() {
           tags: item.tags.map((tag) => (tag.id === updated.id ? updated : tag)),
         })),
       );
+      setMovies((prev) =>
+        prev.map((item) => ({
+          ...item,
+          tags: item.tags.map((tag) => (tag.id === updated.id ? updated : tag)),
+        })),
+      );
       setEditingTagId(null);
       setEditingName('');
       setError(null);
@@ -99,6 +123,12 @@ export default function TagAdminPage() {
       await deleteTag(tag.id);
       setTags((prev) => prev.filter((existing) => existing.id !== tag.id));
       setSeries((prev) =>
+        prev.map((item) => ({
+          ...item,
+          tags: item.tags.filter((existing) => existing.id !== tag.id),
+        })),
+      );
+      setMovies((prev) =>
         prev.map((item) => ({
           ...item,
           tags: item.tags.filter((existing) => existing.id !== tag.id),
@@ -158,7 +188,8 @@ export default function TagAdminPage() {
       ) : (
         <div className="space-y-2">
           {sortedTags.map((tag) => {
-            const usage = usageByTag.get(tag.id) || 0;
+            const seriesUsage = seriesUsageByTag.get(tag.id) || 0;
+            const movieUsage = movieUsageByTag.get(tag.id) || 0;
             const isEditing = editingTagId === tag.id;
 
             return (
@@ -179,8 +210,13 @@ export default function TagAdminPage() {
                   )}
                 </div>
 
-                <div className="text-xs text-gray-400 shrink-0">
-                  {usage} Serie{usage !== 1 ? 'n' : ''}
+                <div className="text-xs text-gray-400 shrink-0 flex gap-3">
+                  <span>
+                    {seriesUsage} Serie{seriesUsage !== 1 ? 'n' : ''}
+                  </span>
+                  <span>
+                    {movieUsage} Film{movieUsage !== 1 ? 'e' : ''}
+                  </span>
                 </div>
 
                 <div className="flex gap-2 shrink-0">

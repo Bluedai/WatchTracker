@@ -1,19 +1,19 @@
 # WatchTracker
 
-Selbst gehostete Web-Anwendung zur Verwaltung des Serien-Fortschritts. Verwalte deine Seriensammlung, tracke welche Episoden du gesehen hast, und behalte den Überblick über deinen Fortschritt – alles in einer deutschen Benutzeroberfläche.
+Selbst gehostete Web-Anwendung zur Verwaltung des Serien- und Film-Fortschritts. Verwalte deine Serien- und Filmsammlung, tracke welche Episoden und Filme du gesehen hast, und behalte den Überblick über deinen Fortschritt – alles in einer deutschen Benutzeroberfläche.
 
 ## Features
 
-- **Seriensuche** – Suche nach Serien über die TMDB-API und füge sie zu deiner Bibliothek hinzu
-- **Deutsche Episodentitel** – Bevorzugt deutsche Titel, englisch als Fallback
-- **Episodenverwaltung** – Markiere Episoden als gesehen, mit vollständigem Sichtungsverlauf
-- **Mehrfach-Sichtungen** – Eine Episode kann mehrfach als gesehen markiert werden, jede Sichtung wird mit Datum historisiert
+- **Serien- und Filmsuche** – Suche nach Serien und Filmen über die TMDB-API und füge sie zu deiner Bibliothek hinzu
+- **Deutsche Titel** – Bevorzugt deutsche Titel, englisch als Fallback
+- **Episoden- und Filmverwaltung** – Markiere Episoden und Filme als gesehen, mit vollständigem Sichtungsverlauf
+- **Mehrfach-Sichtungen** – Eine Episode oder ein Film kann mehrfach als gesehen markiert werden, jede Sichtung wird mit Datum historisiert
 - **Manuelle Korrekturen** – Titel und Beschreibungen können lokal überschrieben werden, ohne bei Aktualisierung verloren zu gehen
-- **Tags pro Serie** – Erstelle eigene Tags und ordne einer Serie mehrere Tags zu
+- **Tags pro Serie / Film** – Erstelle eigene Tags und ordne Serien und Filmen mehrere Tags zu
 - **Tag-Verwaltung** – Tags umbenennen/loeschen und Nutzung je Tag einsehen
-- **Fortschrittsanzeige** – Pro Serie, pro Staffel und gesamt
-- **Filter** – Gesehen/Ungesehen, nur bearbeitete Einträge
-- **API-Synchronisation** – Button zum Nachladen neuer Staffeln und Episoden aus TMDB
+- **Fortschrittsanzeige** – Pro Serie, pro Staffel, für Filme und gesamt
+- **Filter** – Nach Tags filtern, separate Abschnitte für Serien und Filme in der Bibliothek
+- **API-Synchronisation** – Button zum Nachladen neuer Staffeln, Episoden und Filmdaten aus TMDB
 - **Docker Compose** – Ein Befehl zum Starten
 
 ## Voraussetzungen
@@ -72,36 +72,41 @@ Um die App von anderen Geräten im lokalen Netzwerk zu erreichen, verwende die I
 
 ## Benutzung
 
-### Serien hinzufügen
+### Serien und Filme hinzufügen
 1. Navigiere zu **Suche**
-2. Gib den Seriennamen ein und klicke **Suchen**
-3. Klicke **Hinzufügen** bei der gewünschten Serie
-4. Staffeln und Episoden werden automatisch aus TMDB geladen
+2. Wähle oben den Reiter **Serien** oder **Filme**
+3. Gib den Titel ein und klicke **Suchen**
+4. Klicke **Hinzufügen** beim gewünschten Eintrag
+5. Bei Serien werden Staffeln und Episoden automatisch aus TMDB geladen
 
-### Episoden als gesehen markieren
+### Episoden und Filme als gesehen markieren
 - In der Staffelansicht: Klicke auf den Kreis links neben einer Episode
-- In der Episodendetailansicht: Klicke **Als gesehen markieren**
+- In der Episoden- oder Filmdetailansicht: Klicke **Als gesehen markieren**
 - Jeder Klick erstellt einen neuen Sichtungseintrag (Mehrfach-Sichtungen möglich)
 
 ### Sichtungen verwalten
-- In der Episodendetailansicht siehst du den vollständigen Sichtungsverlauf
+- In der Episoden- oder Filmdetailansicht siehst du den vollständigen Sichtungsverlauf
 - Jeder Eintrag kann bearbeitet (Datum/Notiz ändern) oder gelöscht werden
 
-### Seriendaten aktualisieren
-- Auf der Seriendetail-Seite: Klicke **Aktualisieren**
-- Neue Staffeln und Episoden werden aus TMDB nachgeladen
+### Serien- und Filmdaten aktualisieren
+- Auf der Detail-Seite: Klicke **Aktualisieren**
+- Neue Staffeln und Episoden bzw. Filmdaten werden aus TMDB nachgeladen
 - Deine manuellen Korrekturen bleiben dabei erhalten
 
 ### Manuelle Korrekturen
-- Klicke **Bearbeiten** auf der Serien-, Staffel- oder Episodendetail-Seite
+- Klicke **Bearbeiten** auf der Serien-, Staffel-, Episoden- oder Filmdetail-Seite
 - Ändere Titel oder Beschreibung
 - Klicke **Speichern**
 - Zum Zurücksetzen: **Overrides zurücksetzen** entfernt alle manuellen Änderungen
 
 ### Tags verwalten
-- Auf der Seriendetail-Seite kannst du Tags zuweisen, entfernen, umbenennen und global loeschen
-- In der Bibliothek kannst du nach Tags filtern
+- Auf der Serien- oder Filmdetail-Seite kannst du Tags zuweisen, entfernen, umbenennen und global loeschen
+- In der Bibliothek kannst du in den Abschnitten **Serien** und **Filme** nach Tags filtern
 - Auf der Seite **Tags** kannst du alle Tags zentral pflegen
+
+### Bibliothek
+- Die Startseite zeigt getrennte Reiter für **Serien** und **Filme**
+- Der jeweilige Fortschritt wird pro Abschnitt angezeigt
 
 ## Technologie
 
@@ -114,6 +119,15 @@ Um die App von anderen Geräten im lokalen Netzwerk zu erreichen, verwende die I
 | Styling | TailwindCSS |
 | API-Quelle | TMDB (The Movie Database) |
 | Deployment | Docker Compose |
+
+## Medientypen
+
+Die App unterstützt zwei Medientypen:
+
+- **Serien** mit Staffeln und Episoden
+- **Filme** ohne Staffel-/Episodenstruktur
+
+In der Suche kannst du zwischen Serien und Filmen wechseln. In der Bibliothek werden beide Medientypen in separaten Reitern angezeigt.
 
 ## Projektstruktur
 
@@ -154,10 +168,24 @@ Um die App von anderen Geräten im lokalen Netzwerk zu erreichen, verwende die I
 
 | Methode | Pfad | Beschreibung |
 |---|---|---|
-| GET | `/api/search?q=…` | TMDB-Suche |
+| GET | `/api/search?q=…` | TMDB-Suche nach Serien |
+| GET | `/api/search/movies?q=…` | TMDB-Suche nach Filmen |
 | POST | `/api/series` | Serie hinzufügen |
-| GET | `/api/series` | Bibliothek auflisten |
+| GET | `/api/series` | Serien auflisten |
 | GET | `/api/series/{id}` | Seriendetails |
+| POST | `/api/movies` | Film hinzufügen |
+| GET | `/api/movies` | Filme auflisten |
+| GET | `/api/movies/{id}` | Filmdetails |
+| PUT | `/api/movies/{id}` | Film bearbeiten |
+| DELETE | `/api/movies/{id}` | Film entfernen |
+| POST | `/api/movies/{id}/sync` | Film aus TMDB aktualisieren |
+| PUT | `/api/movies/{id}/reset-overrides` | Film-Overrides zurücksetzen |
+| PUT | `/api/movies/{id}/tags` | Tags eines Films setzen |
+| POST | `/api/movies/{id}/tags/{tag_id}` | Tag zu Film hinzufügen |
+| DELETE | `/api/movies/{id}/tags/{tag_id}` | Tag von Film entfernen |
+| POST | `/api/movies/{id}/watch` | Filmsichtung hinzufügen |
+| PUT | `/api/movies/watches/{id}` | Filmsichtung bearbeiten |
+| DELETE | `/api/movies/watches/{id}` | Filmsichtung löschen |
 | PUT | `/api/series/{id}` | Serie bearbeiten |
 | PUT | `/api/series/{id}/tags` | Tags einer Serie setzen |
 | POST | `/api/series/{id}/tags/{tag_id}` | Tag zu Serie hinzufügen |

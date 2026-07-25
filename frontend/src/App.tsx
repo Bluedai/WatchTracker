@@ -7,6 +7,7 @@ import SeasonView from './pages/SeasonView';
 import EpisodeDetailPage from './pages/EpisodeDetail';
 import WatchHistoryPage from './pages/WatchHistory';
 import TagAdminPage from './pages/TagAdmin';
+import MovieDetailPage from './pages/MovieDetail';
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
         <Route path="/" element={<Library />} />
         <Route path="/suche" element={<Search />} />
         <Route path="/serie/:id" element={<SeriesDetailPage />} />
+        <Route path="/film/:id" element={<MovieDetailPage />} />
         <Route path="/serie/:seriesId/staffel/:seasonId" element={<SeasonView />} />
         <Route path="/episode/:id" element={<EpisodeDetailPage />} />
         <Route path="/verlauf" element={<WatchHistoryPage />} />

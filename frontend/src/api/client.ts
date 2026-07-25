@@ -11,6 +11,8 @@ import type {
   SeasonIgnoreResponse,
   StatsResponse,
   Tag,
+  MovieListItem,
+  MovieDetail,
 } from '../types';
 
 const api = axios.create({
@@ -32,6 +34,11 @@ export function stillUrl(path: string | null, size: string = 'w300'): string {
 // --- Search ---
 export async function searchSeries(query: string): Promise<SearchResponse> {
   const { data } = await api.get('/search', { params: { q: query } });
+  return data;
+}
+
+export async function searchMovies(query: string): Promise<SearchResponse> {
+  const { data } = await api.get('/search/movies', { params: { q: query } });
   return data;
 }
 
@@ -162,6 +169,68 @@ export async function deleteWatch(watchId: number): Promise<void> {
 export async function getWatchHistory(limit: number = 50, offset: number = 0): Promise<WatchHistoryItem[]> {
   const { data } = await api.get('/watch-history', { params: { limit, offset } });
   return data;
+}
+
+// --- Movies ---
+export async function getMovies(): Promise<MovieListItem[]> {
+  const { data } = await api.get('/movies');
+  return data;
+}
+
+export async function getMovieDetail(id: number): Promise<MovieDetail> {
+  const { data } = await api.get(`/movies/${id}`);
+  return data;
+}
+
+export async function addMovie(tmdbId: number): Promise<MovieDetail> {
+  const { data } = await api.post('/movies', { tmdb_id: tmdbId });
+  return data;
+}
+
+export async function updateMovie(
+  id: number,
+  body: { title_override?: string | null; overview_override?: string | null }
+): Promise<MovieDetail> {
+  const { data } = await api.put(`/movies/${id}`, body);
+  return data;
+}
+
+export async function deleteMovie(id: number): Promise<void> {
+  await api.delete(`/movies/${id}`);
+}
+
+export async function syncMovie(id: number): Promise<MovieDetail> {
+  const { data } = await api.post(`/movies/${id}/sync`);
+  return data;
+}
+
+export async function resetMovieOverrides(id: number): Promise<MovieDetail> {
+  const { data } = await api.put(`/movies/${id}/reset-overrides`);
+  return data;
+}
+
+export async function setMovieTags(id: number, tagIds: number[]): Promise<void> {
+  await api.put(`/movies/${id}/tags`, { tag_ids: tagIds });
+}
+
+export async function addMovieWatch(
+  movieId: number,
+  body?: { watched_at?: string; notes?: string }
+): Promise<WatchEntry> {
+  const { data } = await api.post(`/movies/${movieId}/watch`, body || {});
+  return data;
+}
+
+export async function updateMovieWatch(
+  watchId: number,
+  body: { watched_at?: string; notes?: string }
+): Promise<WatchEntry> {
+  const { data } = await api.put(`/movies/watches/${watchId}`, body);
+  return data;
+}
+
+export async function deleteMovieWatch(watchId: number): Promise<void> {
+  await api.delete(`/movies/watches/${watchId}`);
 }
 
 // --- Progress & Stats ---
